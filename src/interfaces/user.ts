@@ -9,7 +9,7 @@ interface User{
 
 
 
-export const testUsers: User[]=[
+const testUsers: User[]=[
     {  
         id: 0,
         name: 'Anonimo',
@@ -35,5 +35,9 @@ export const testUsers: User[]=[
         myList:[]
     }
 ]
+
+export function getProfiles(){
+    return testUsers.map(user=>({id:user.id,name:user.name, age:user.age, myList:user.myList}))
+}
 
 export default User;

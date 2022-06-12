@@ -1,9 +1,7 @@
 import inquirer from "inquirer";
 
 import Movie from "./interfaces/movie";
-import protoUser, { getProfiles } from "./interfaces/protoUser";
-import User from "./interfaces/user";
-
+import User, { getProfiles } from "./interfaces/user";
 import MovieService from "./services/MovieService";
 import addMovie from "./utils/addMovie";
 import calcMoviesAverage from "./utils/calculateMoviesAverage";
@@ -130,7 +128,7 @@ async function run(user: User){
                 console.log('Por enquanto, nenhum filme foi avaliado.');
             }
             else{
-                console.log(ratedMovies);
+                ratedMovies.map(movie => console.log(`${movie.id} - Nome: ${movie.name} Avaliações: ${movie.ratings}`));
             }
             run(user);
         break;
@@ -142,7 +140,7 @@ async function run(user: User){
                 console.log('Por enquanto, não há nenhum filme com uma média de avaliações.');
             }
             else{
-                console.log(ratedAverageMovies);
+                ratedAverageMovies.map(movie => console.log(`${movie.id} - Nome: ${movie.name} Média de avaliações: ${movie.average}`));
             }
             run(user);
         break;
