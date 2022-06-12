@@ -1,34 +1,23 @@
 import inquirer from "inquirer";
+
 import Movie from "./interfaces/movie";
+import protoUser, { getProfiles } from "./interfaces/protoUser";
 import User from "./interfaces/user";
+
 import MovieService from "./services/MovieService";
+import addMovie from "./utils/addMovie";
 import calcMoviesAverage from "./utils/calculateMoviesAverage";
+import login from "./utils/login";
 import removeMovieWithoutRatings from "./utils/removeMovieWithoutRatings";
 
-const user: User[]=[
-    {
-        name: "Thiago Fumega", 
-        age: 29, 
-        myList:[]
-    },
-    {
-        name:"Bruno Benicio",
-        age: 27,
-        myList:[]
-    },
-    {
-        name:"Seu Zé",
-        age: 79,
-        myList:[]
-    }
-]
+
 
 const listOfMovies: Movie[] = [];
 
 const questions = [{
     type:"number",
     name: "option",
-    message: "Digite uma opção: \n 1 - Avaliar filme por ID \n 2 - Listar filmes avaliados \n 3 - Listar média de avaliações \n 4 - Listar filmes baixados \n 5 - Sair \n"
+    message: "Digite uma opção: \n 1 - Adicionar filme à minha lista \n 2 - Avaliar filme por ID \n 3 - Listar filmes avaliados \n 4 - Listar média de avaliações \n 5 - Listar filmes baixados \n 6 - Minha lista \n 7 - Trocar perfil \n 8 - Sair \n"
 }]
 
 const chooseMovieQuestions = [{
@@ -43,17 +32,46 @@ const rateQuestions = [{
     message:"Qual a avaliação de 0 a 5?"
 }]
 
+const chooseProfile = [{
+    type: "number",
+    name: "option",
+    message: "Selecione um perfil para continuar..."
+}]
 
-const possibleAnswers ={
-    RATE_MOVIE: 1,
-    RATED_MOVIES:2,
-    RATED_AVERAGE_MOVIES: 3,
-    LIST_DOWLOADED_MOVIES: 4,
-    EXIT:5
+const addMovieOptions = [{
+    type: "number",
+    name: "option",
+    message: "Selecione um filme adiciona-lo à sua lista..."
+}]
+
+
+const possibleAnswers ={    
+    ADD_MOVIE_TO_MYLIST: 1,
+    RATE_MOVIE: 2,    
+    RATED_MOVIES:3,
+    RATED_AVERAGE_MOVIES: 4,
+    LIST_DOWLOADED_MOVIES: 5,
+    MY_LIST: 6,
+    CHANGE_PROFILE: 7,    
+    EXIT:8
 }
 
-async function run(){   
-    const movieService =  new MovieService();
+async function start(){
+    getProfiles().map(profile => console.log(`${profile.id} - nome: ${profile.name}`));
+    const choosenProfile =  await inquirer.prompt(chooseProfile);    
+    
+    if((choosenProfile.option >= 0) && (choosenProfile.option <= 3)){
+        const user: User = login(choosenProfile.option);
+        console.log(`Logado como: ${user.name}`);
+        run(user);
+    } 
+    else{
+        start();
+    }
+}
+
+async function run(user: User){   
+    const movieService =  new MovieService(); 
     if(listOfMovies.length == 0){
         try{
                 //Baixando 5 primeiros filmes da api fornecida
@@ -76,6 +94,16 @@ async function run(){
     
     const answers = await inquirer.prompt(questions);
     switch(answers.option){   
+
+        case possibleAnswers.ADD_MOVIE_TO_MYLIST:
+            listOfMovies.map(movie => console.log(`${movie.id} - nome: ${movie.name}`));
+            const moviesToAddMyList = await inquirer.prompt(addMovieOptions);
+            user = addMovie(user, listOfMovies, moviesToAddMyList.option);
+            console.log('Filme adicionado com sucesso!');
+            run(user);
+
+
+        break;
         //Avaliar filme por id
         case possibleAnswers.RATE_MOVIE:
             let movieId;
@@ -92,8 +120,8 @@ async function run(){
                     break;
                 }
             }           
-            run();
-        break; 
+            run(user);
+        break;       
 
         //Listar filmes avaliados
         case possibleAnswers.RATED_MOVIES:
@@ -104,8 +132,10 @@ async function run(){
             else{
                 console.log(ratedMovies);
             }
-            run();
+            run(user);
         break;
+        
+        //Listar média de avaliações
         case possibleAnswers.RATED_AVERAGE_MOVIES:
             let ratedAverageMovies = calcMoviesAverage(listOfMovies);
             if(ratedAverageMovies.length == 0){
@@ -114,26 +144,35 @@ async function run(){
             else{
                 console.log(ratedAverageMovies);
             }
-            run();
+            run(user);
         break;
 
         //Listar filmes baixados      
         case possibleAnswers.LIST_DOWLOADED_MOVIES:            
             listOfMovies.map(movie => console.log(`${movie.id} - nome: ${movie.name}`));
-            run();
+            run(user);
         break;
+        //Consultar minha lista
+        case possibleAnswers.MY_LIST:
+            console.log(user.myList);
+            run(user);
+        break;
+        //Trocar de perfil (usuário)
+        case possibleAnswers.CHANGE_PROFILE:
+            start();
+        break;       
         
         //Sair
-        case possibleAnswers.EXIT:
+        case possibleAnswers.EXIT:           
         break;
         
         default:
-            run();
+            run(user);
         break;
     }
 }
 
-run();
+start();
 
 
 
